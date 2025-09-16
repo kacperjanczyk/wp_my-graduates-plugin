@@ -8,6 +8,8 @@ use WP_REST_Controller;
 use WP_REST_Response;
 use WP_REST_Server;
 
+use function Env\env;
+
 class RestController extends WP_REST_Controller
 {
     protected $namespace = 'my-graduates';
@@ -35,12 +37,14 @@ class RestController extends WP_REST_Controller
         $graduates = [];
 
         foreach ($query->posts as $post) {
+            $photoUrl = get_post_meta($post->ID, '_graduate_photo', true);
+
             $graduates[] = [
                 'id' => $post->ID,
                 'first_name' => get_post_meta($post->ID, '_graduate_first_name', true),
                 'last_name' => get_post_meta($post->ID, '_graduate_last_name', true),
                 'description' => get_post_meta($post->ID, '_graduate_description', true),
-                'photo' => get_post_meta($post->ID, '_graduate_photo', true),
+                'photo' => $photoUrl ? esc_url_raw($photoUrl) : null,
             ];
         }
 
@@ -49,10 +53,24 @@ class RestController extends WP_REST_Controller
 
     public function checkPermission($request): bool|WP_Error
     {
-        $apiKey = $request->get_header('X-API-KEY');
-        $validApiKey = NONCE_KEY;
+        $allowedIpsEnv = env('MY_GRADUATES_ALLOWED_IPS');
+        if (!empty($allowedIpsEnv)) {
+            $clientIp = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+            $allowedIps = array_map('trim', explode(',', $allowedIpsEnv));
 
-        if ($apiKey !== $validApiKey) {
+            if (!in_array($clientIp, $allowedIps, true)) {
+                return new WP_Error(
+                    'forbidden_ip',
+                    'Access from your IP address is not allowed',
+                    ['status' => 403]
+                );
+            }
+        }
+
+        $apiKey = $request->get_header('X-API-KEY');
+        $validApiKey = env('MY_GRADUATES_API_KEY');
+
+        if (!$apiKey || !hash_equals($validApiKey, $apiKey)) {
             return new WP_Error(
                 'invalid_api_key',
                 'Invalid API Key',
