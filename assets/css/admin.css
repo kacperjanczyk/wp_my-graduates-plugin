@@ -1,0 +1,12 @@
+.my-graduates-table {
+    .required {
+        color: #dc3232;
+    }
+    .media-preview img {
+        max-width: 200px;
+        height: auto;
+        border: 1px solid #ddd;
+        padding: 5px;
+        margin-top: 10px;
+    }
+}
