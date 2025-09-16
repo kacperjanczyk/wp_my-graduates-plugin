@@ -9,7 +9,7 @@ class Assets
         add_action('admin_enqueue_scripts', [$this, 'enqueueAdminAssets']);
     }
 
-    public function enqueueAdminAssets($hook): void
+    public function enqueueAdminAssets(): void
     {
         global $post_type;
 
@@ -17,16 +17,10 @@ class Assets
             return;
         }
 
-        if (in_array($hook, ['post-new.php', 'post.php'])) {
-            $this->enqueueEditPageAssets();
-        }
-
-        if ($hook === 'edit.php') {
-            $this->enqueueListPageAssets();
-        }
+        $this->enqueueAssets();
     }
 
-    private function enqueueEditPageAssets(): void
+    private function enqueueAssets(): void
     {
         wp_enqueue_style(
             'my-graduates-admin',
@@ -39,25 +33,15 @@ class Assets
         wp_enqueue_script(
             'my-graduates-admin',
             MY_GRADUATES_PLUGIN_URL . 'assets/js/admin.js',
-            ['jquery', 'wp-media'],
+            ['jquery'],
             MY_GRADUATES_VERSION,
             true
         );
 
-//        wp_localize_script('my-graduates-admin', 'myGraduatesL10n', [
-//            'selectPhoto' => __('Select Photo', 'my-graduates'),
-//            'useThisPhoto' => __('Use this photo', 'my-graduates'),
-//            'removePhoto' => __('Remove photo', 'my-graduates'),
-//        ]);
-    }
-
-    private function enqueueListPageAssets(): void
-    {
-        wp_enqueue_style(
-            'my-graduates-admin-list',
-            MY_GRADUATES_PLUGIN_URL . 'assets/css/admin.css',
-            [],
-            MY_GRADUATES_VERSION
-        );
+        wp_localize_script('my-graduates-admin', 'myGraduatesL10n', [
+            'selectPhoto' => __('Select Photo', 'my-graduates'),
+            'useThisPhoto' => __('Use this photo', 'my-graduates'),
+            'removePhoto' => __('Remove photo', 'my-graduates'),
+        ]);
     }
 }
